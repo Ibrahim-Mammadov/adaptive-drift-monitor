@@ -1,5 +1,6 @@
 from dataclasses import dataclass
-from math import sqrt
+from math import isfinite
+from statistics import median
 from collections import deque
 
 @dataclass(frozen=True)
@@ -19,15 +20,16 @@ class DriftDetector:
 
     def update(self, value: float):
         value = float(value)
-        if not value == value:
+        if not isfinite(value):
             raise ValueError("value must be finite")
         self.index += 1
         baseline = list(self.values)
         score = 0.0
         if len(baseline) >= 3:
-            mu = sum(baseline) / len(baseline)
-            sd = sqrt(sum((x - mu) ** 2 for x in baseline) / len(baseline)) or 1e-12
-            score = abs(value - mu) / sd
+            center = median(baseline)
+            mad = median(abs(x - center) for x in baseline)
+            scale = 1.4826 * mad or 1e-12
+            score = abs(value - center) / scale
         self.values.append(value)
         self.mean += (value - self.mean) / (self.index + 1)
         self.ph = max(0.0, self.ph + value - self.mean - self.delta)
