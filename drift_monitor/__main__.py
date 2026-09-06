@@ -1,0 +1,1 @@
+import argparse, json\nfrom .detector import DriftDetector\n\ndef main():\n    p = argparse.ArgumentParser(); p.add_argument("--values", required=True)\n    a = p.parse_args(); d = DriftDetector()\n    for v in a.values.split(","):\n        alert = d.update(float(v))\n        if alert: print(json.dumps(alert.__dict__))\nif __name__ == "__main__": main()\n
